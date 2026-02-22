@@ -52,7 +52,7 @@ jobs:
           python -m venv .venv
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r src/requirements.txt
 
       # Deploy models (idempotent)
       - name: Deploy Models
@@ -64,7 +64,7 @@ jobs:
           echo "=== Deploying Models (idempotent) ==="
           python src/scripts/deploy_models.py
 
-      # Deploy agents (idempotent) - includes all specialists and orchestrator
+      # Deploy agents (idempotent)
       - name: Deploy Agents
         env:
           PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
@@ -74,6 +74,17 @@ jobs:
           source .venv/bin/activate
           echo "=== Deploying Agents (idempotent) ==="
           python src/scripts/deploy_agents.py
+
+      # Create orchestrator agent (idempotent)
+      - name: Create Orchestrator Agent
+        env:
+          PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+          AZURE_AI_PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+          AZURE_ENV_NAME: ${{ env.AZURE_ENV_NAME }}
+        run: |
+          source .venv/bin/activate
+          echo "=== Creating Orchestrator Agent (idempotent) ==="
+          python src/agents/create_orchestrator_agent.py
 
       # Export agent IDs to GitHub environment
       - name: Export Agent IDs
