@@ -1,15 +1,13 @@
 name: foundry-agent-app
-metadata:
-  template: foundry-agent-app@0.1.0
+
+infra:
+  provider: bicep
+  path: infra
+
 services:
   api:
-    project: src/api
+    # PROJECT ROOT: Use ./src (not ./src/api) so both api/ and agents/ are packaged.
+    # This ensures src/agents is available at runtime in /home/site/wwwroot/agents/
+    project: ./src
+    language: python
     host: appservice
-    module: src/api/main
-  web:
-    project: src/web
-    host: staticwebapp
-hooks:
-  predeploy:
-    windows: powershell -Command "python -m pip install -r requirements.txt"
-    linux: python -m pip install -r requirements.txt

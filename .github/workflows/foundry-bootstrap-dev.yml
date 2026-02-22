@@ -1,0 +1,125 @@
+# Azure AI Foundry Bootstrap Workflow (DEV)
+# Deploys models and creates/updates agents idempotently
+# Does NOT deploy FastAPI App Service
+
+name: Foundry Bootstrap (DEV)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'src/agents/**'
+      - 'src/scripts/**'
+      - '.github/workflows/foundry-bootstrap-dev.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_ENV_NAME: dev
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  bootstrap-foundry:
+    name: Bootstrap Azure AI Foundry
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Azure OIDC authentication
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Setup Python environment
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # Create virtual environment and install dependencies
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Deploy models (idempotent)
+      - name: Deploy Models
+        env:
+          PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+          AZURE_AI_PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+        run: |
+          source .venv/bin/activate
+          echo "=== Deploying Models (idempotent) ==="
+          python src/scripts/deploy_models.py
+
+      # Deploy agents (idempotent) - includes all specialists and orchestrator
+      - name: Deploy Agents
+        env:
+          PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+          AZURE_AI_PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+          AZURE_ENV_NAME: ${{ env.AZURE_ENV_NAME }}
+        run: |
+          source .venv/bin/activate
+          echo "=== Deploying Agents (idempotent) ==="
+          python src/scripts/deploy_agents.py
+
+      # Export agent IDs to GitHub environment
+      - name: Export Agent IDs
+        id: agent-ids
+        run: |
+          STATE_FILE=".azure/${{ env.AZURE_ENV_NAME }}/agent_state.json"
+          
+          if [ -f "$STATE_FILE" ]; then
+            echo "Reading agent IDs from $STATE_FILE"
+            
+            # Extract agent IDs from state file
+            ORCHESTRATOR_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.RetailOrchestrator // empty' "$STATE_FILE")
+            INVENTORY_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.InventoryAgent // empty' "$STATE_FILE")
+            STOREOPS_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.StoreOpsAgent // empty' "$STATE_FILE")
+            PLANOGRAM_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.PlanogramAgent // empty' "$STATE_FILE")
+            
+            # Export to GitHub environment
+            echo "ORCHESTRATOR_AGENT_ID=$ORCHESTRATOR_ID" >> $GITHUB_ENV
+            echo "INVENTORY_AGENT_ID=$INVENTORY_ID" >> $GITHUB_ENV
+            echo "STOREOPS_AGENT_ID=$STOREOPS_ID" >> $GITHUB_ENV
+            echo "PLANOGRAM_AGENT_ID=$PLANOGRAM_ID" >> $GITHUB_ENV
+            
+            # Export as outputs
+            echo "orchestrator_id=$ORCHESTRATOR_ID" >> $GITHUB_OUTPUT
+            echo "inventory_id=$INVENTORY_ID" >> $GITHUB_OUTPUT
+            echo "storeops_id=$STOREOPS_ID" >> $GITHUB_OUTPUT
+            echo "planogram_id=$PLANOGRAM_ID" >> $GITHUB_OUTPUT
+          else
+            echo "⚠ State file not found: $STATE_FILE"
+          fi
+
+      # Print summary
+      - name: Print Summary
+        run: |
+          echo "========================================"
+          echo "  Foundry Bootstrap Summary (DEV)"
+          echo "========================================"
+          echo ""
+          echo "Environment: ${{ env.AZURE_ENV_NAME }}"
+          echo ""
+          echo "Agent IDs:"
+          echo "  Orchestrator: ${{ env.ORCHESTRATOR_AGENT_ID }}"
+          echo "  Inventory:    ${{ env.INVENTORY_AGENT_ID }}"
+          echo "  StoreOps:     ${{ env.STOREOPS_AGENT_ID }}"
+          echo "  Planogram:    ${{ env.PLANOGRAM_AGENT_ID }}"
+          echo ""
+          echo "========================================"
+          echo "  Bootstrap completed successfully!"
+          echo "========================================"
