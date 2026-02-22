@@ -1,0 +1,15 @@
+name: foundry-agent-app
+metadata:
+  template: foundry-agent-app@0.1.0
+services:
+  api:
+    project: src/api
+    host: appservice
+    module: src/api/main
+  web:
+    project: src/web
+    host: staticwebapp
+hooks:
+  predeploy:
+    windows: powershell -Command "python -m pip install -r requirements.txt"
+    linux: python -m pip install -r requirements.txt

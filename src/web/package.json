@@ -1,0 +1,23 @@
+{
+  "name": "foundry-agent-web",
+  "version": "0.1.0",
+  "description": "React frontend for Foundry Agent Service",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-react": "^7.30.0"
+  }
+}
