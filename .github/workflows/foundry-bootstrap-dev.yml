@@ -80,19 +80,7 @@ jobs:
           echo "=== Deploying Agents (idempotent) ==="
           python src/scripts/deploy_agents.py
 
-      # Create orchestrator agent (idempotent)
-      - name: Create Orchestrator Agent
-        env:
-          PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
-          AZURE_AI_PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
-          AZURE_AI_MODEL_DEPLOYMENT_NAME: ${{ secrets.AZURE_AI_MODEL_DEPLOYMENT_NAME }}
-          AZURE_ENV_NAME: ${{ env.AZURE_ENV_NAME }}
-        run: |
-          source .venv/bin/activate
-          echo "=== Creating Orchestrator Agent (idempotent) ==="
-          python src/agents/create_orchestrator_agent.py
-
-      # Export agent IDs to GitHub environment
+      # Export agent IDs from state file (created by deploy_agents.py)
       - name: Export Agent IDs
         id: agent-ids
         run: |
@@ -100,6 +88,7 @@ jobs:
           
           if [ -f "$STATE_FILE" ]; then
             echo "Reading agent IDs from $STATE_FILE"
+            cat "$STATE_FILE"
             
             # Extract agent IDs from state file
             ORCHESTRATOR_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.RetailOrchestrator // empty' "$STATE_FILE")
@@ -119,8 +108,23 @@ jobs:
             echo "storeops_id=$STOREOPS_ID" >> $GITHUB_OUTPUT
             echo "planogram_id=$PLANOGRAM_ID" >> $GITHUB_OUTPUT
           else
-            echo "⚠ State file not found: $STATE_FILE"
+            echo "❌ State file not found: $STATE_FILE"
+            exit 1
           fi
+
+      # Connect orchestrator to specialist agents (runs AFTER agent IDs are exported)
+      - name: Connect Orchestrator Agent
+        env:
+          PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+          ORCHESTRATOR_AGENT_ID: ${{ env.ORCHESTRATOR_AGENT_ID }}
+          ORCHESTRATOR_MODEL_DEPLOYMENT: ${{ secrets.AZURE_AI_MODEL_DEPLOYMENT_NAME }}
+          STOREOPS_AGENT_ID: ${{ env.STOREOPS_AGENT_ID }}
+          INVENTORY_AGENT_ID: ${{ env.INVENTORY_AGENT_ID }}
+          PLANOGRAM_AGENT_ID: ${{ env.PLANOGRAM_AGENT_ID }}
+        run: |
+          source .venv/bin/activate
+          echo "=== Connecting Orchestrator to Specialist Agents ==="
+          python src/agents/create_orchestrator_agent.py
 
       # Print summary
       - name: Print Summary
