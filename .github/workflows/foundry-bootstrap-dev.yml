@@ -73,6 +73,7 @@ jobs:
         env:
           PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
           AZURE_AI_PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+          AZURE_AI_MODEL_DEPLOYMENT_NAME: ${{ secrets.AZURE_AI_MODEL_DEPLOYMENT_NAME }}
           AZURE_ENV_NAME: ${{ env.AZURE_ENV_NAME }}
         run: |
           source .venv/bin/activate
@@ -84,6 +85,7 @@ jobs:
         env:
           PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
           AZURE_AI_PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+          AZURE_AI_MODEL_DEPLOYMENT_NAME: ${{ secrets.AZURE_AI_MODEL_DEPLOYMENT_NAME }}
           AZURE_ENV_NAME: ${{ env.AZURE_ENV_NAME }}
         run: |
           source .venv/bin/activate
