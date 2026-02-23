@@ -45,8 +45,8 @@ from azure.identity import DefaultAzureCredential
 DEFAULT_DEPLOYMENT_NAME = "gpt-4o-mini"
 DEFAULT_MODEL_NAME = "gpt-4o-mini"
 DEFAULT_MODEL_FORMAT = "OpenAI"
-DEFAULT_SKU_NAME = "Standard"
-DEFAULT_SKU_CAPACITY = 1
+DEFAULT_SKU_NAME = "GlobalStandard"
+DEFAULT_SKU_CAPACITY = 10
 
 # Azure Resource Manager API version for Cognitive Services deployments
 ARM_API_VERSION = "2025-06-01"
