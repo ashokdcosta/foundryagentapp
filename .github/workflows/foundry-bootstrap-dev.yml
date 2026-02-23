@@ -90,11 +90,11 @@ jobs:
             echo "Reading agent IDs from $STATE_FILE"
             cat "$STATE_FILE"
             
-            # Extract agent IDs from state file
-            ORCHESTRATOR_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.RetailOrchestrator // empty' "$STATE_FILE")
-            INVENTORY_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.InventoryAgent // empty' "$STATE_FILE")
-            STOREOPS_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.StoreOpsAgent // empty' "$STATE_FILE")
-            PLANOGRAM_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.PlanogramAgent // empty' "$STATE_FILE")
+            # Extract agent IDs from state file (structure: {env: {agents: {Name: {id: "..."}}}})
+            ORCHESTRATOR_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.RetailOrchestrator.id // empty' "$STATE_FILE")
+            INVENTORY_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.InventoryAgent.id // empty' "$STATE_FILE")
+            STOREOPS_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.StoreOpsAgent.id // empty' "$STATE_FILE")
+            PLANOGRAM_ID=$(jq -r '."${{ env.AZURE_ENV_NAME }}".agents.PlanogramAgent.id // empty' "$STATE_FILE")
             
             # Export to GitHub environment
             echo "ORCHESTRATOR_AGENT_ID=$ORCHESTRATOR_ID" >> $GITHUB_ENV
