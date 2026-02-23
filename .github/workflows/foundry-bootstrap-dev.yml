@@ -26,6 +26,7 @@ jobs:
   bootstrap-foundry:
     name: Bootstrap Azure AI Foundry
     runs-on: ubuntu-latest
+    environment: dev
 
     steps:
       # Checkout repository
