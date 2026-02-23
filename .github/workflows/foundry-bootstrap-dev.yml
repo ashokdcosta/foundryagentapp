@@ -59,6 +59,9 @@ jobs:
         env:
           PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
           AZURE_AI_PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          AZURE_OPENAI_ACCOUNT_NAME: ${{ secrets.AZURE_OPENAI_ACCOUNT_NAME }}
         run: |
           source .venv/bin/activate
           echo "=== Deploying Models (idempotent) ==="
